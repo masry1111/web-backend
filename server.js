@@ -11,15 +11,14 @@ const CreateRoomTableNew = `CREATE TABLE Room (
     capacity INTEGER DEFAULT 10
 )`;
 
-//makes sure old tables are deleted to keep the database uptodate with bookings
 db.serialize(() => {
-    console.log(">> ⚠️  NUCLEAR RESET: Deleting old tables...");
+    console.log(">>NUCLEAR RESET: Deleting old tables...");
     db.run("DROP TABLE IF EXISTS Booking");
     db.run("DROP TABLE IF EXISTS Room");
     db.run("DROP TABLE IF EXISTS User");
 
     const { CreateUserTable, CreateBookingTable } = require('./models/db');
-    
+
     db.run(CreateUserTable);
     db.run(CreateRoomTableNew);
     db.run(CreateBookingTable);
@@ -27,10 +26,12 @@ db.serialize(() => {
     console.log(">> Tables Recreated with 'Capacity' column.");
 
     //manager info
-    const managerPassword = 'admin_mohamed'; 
+    const managerPassword = 'admin_mohamed';
     bcrypt.hash(managerPassword, 10, (err, hash) => {
-        db.run(`INSERT INTO User (name, email, password, role) VALUES (?, ?, ?, ?)`, 
-        ['Mohamed', 'mohamed@diamondresort.com', hash, 'manager']);
+        db.run(
+            `INSERT INTO User (name, email, password, role) VALUES (?, ?, ?, ?)`,
+            ['Mohamed', 'mohamed@diamondresort.com', hash, 'manager']
+        );
     });
 
     //room info
@@ -41,13 +42,15 @@ db.serialize(() => {
     ];
 
     const insertRoom = `INSERT INTO Room (type, price, description, capacity) VALUES (?, ?, ?, 10)`;
-    
+
     rooms.forEach(room => {
         db.run(insertRoom, [room.type, room.price, room.desc]);
     });
+
     console.log(">> 3 Rooms Added with Capacity: 10");
 });
 
+//start server
 app.listen(PORT, () => {
     console.log(`Diamond Resort Server running on port ${PORT}`);
 });
