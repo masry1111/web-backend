@@ -20,21 +20,15 @@ const CreateRoomTable = `CREATE TABLE IF NOT EXISTS Room (
 )`;
 
 // booking table (for bookings and payments)
-const CreateBookingTable = `CREATE TABLE IF NOT EXISTS Booking (
+const CreateBookingTable = `CREATE TABLE Booking (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userId INTEGER NOT NULL,
-    roomId INTEGER NOT NULL,
-    checkInDate TEXT NOT NULL,
-    checkOutDate TEXT NOT NULL,
-    paymentStatus TEXT DEFAULT 'Pending', -- 'Paid', 'Pending', 'Refunded'
-    status TEXT DEFAULT 'Confirmed',      -- 'Confirmed', 'Cancelled'
-    FOREIGN KEY(userId) REFERENCES User(id),
-    FOREIGN KEY(roomId) REFERENCES Room(id)
+    user_id INTEGER NOT NULL,
+    room_id INTEGER NOT NULL,
+    check_in_date TEXT NOT NULL,
+    check_out_date TEXT NOT NULL,
+    status TEXT DEFAULT 'confirmed',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(id),
+    FOREIGN KEY (room_id) REFERENCES Room(id)
 )`;
-
-module.exports = { 
-    db, 
-    CreateUserTable,
-    CreateRoomTable,
-    CreateBookingTable
-};
+module.exports = { CreateUserTable, CreateBookingTable };
