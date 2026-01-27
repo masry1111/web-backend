@@ -1,6 +1,6 @@
 const express = require('express');
 // Importing the controller functions
-const { signup, login, signout } = require('../controller/authController');
+const { signup, login, signout, deleteAccount } = require('../controller/authController');
 
 // importing validator
 const { validateLogin, validateSignup } = require('../validators/validator');
@@ -18,5 +18,9 @@ AuthRouter.route('/login')
 // Route for User Signout
 AuthRouter.route('/signout')
     .post(signout);
+
+// Route for Deleting User Account
+AuthRouter.route('/account')
+    .post(deleteAccount);
 
 module.exports = AuthRouter;

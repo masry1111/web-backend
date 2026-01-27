@@ -93,4 +93,39 @@ const signout = (req, res) => {
     return res.status(200).send("Logged out successfully");
 };
 
-module.exports = { signup, login, signout };
+//deleteAccount
+const deleteAccount = (req, res) => {
+    const ip = req.ip;
+    const time = new Date().toISOString();
+    const userId = req.user.id;
+    const email = req.user.email;
+
+    db.serialize(() => {
+        // Delete all bookings for user first
+        db.run('DELETE FROM Booking WHERE user_id = ?', [userId], (err) => {
+            if (err) {
+                console.log(`[${time}] [DELETE-FAIL] Booking deletion failed for: ${email} | IP: ${ip}`);
+                return res.status(500).send('Delete failed');
+            }
+
+            // Delete the user
+            db.run('DELETE FROM User WHERE id = ?', [userId], function(err) {
+                if (err) {
+                    console.log(`[${time}] [DELETE-FAIL] User deletion failed for: ${email} | IP: ${ip}`);
+                    return res.status(500).send('Delete failed');
+                }
+
+                if (this.changes === 0) {
+                    console.log(`[${time}] [DELETE-FAIL] User not found: ${email} | IP: ${ip}`);
+                    return res.status(404).send('User not found');
+                }
+
+                console.log(`[${time}] [DELETE-SUCCESS] Account deleted: ${email} | IP: ${ip}`);
+                res.clearCookie("token");
+                return res.status(200).json({ message: 'Account deleted successfully' });
+            });
+        });
+    });
+};
+
+module.exports = { signup, login, signout, deleteAccount };

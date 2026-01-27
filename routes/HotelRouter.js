@@ -17,6 +17,34 @@ HotelRouter.get('/rooms', getAvailableRooms);
 // Get ONE room by ID (public)
 //Endpoint: GET /api/rooms/:id
 
+
+router.get('/rooms/available', (req, res) => {
+    const checkIn = req.query.checkIn;
+    const checkOut = req.query.checkOut;
+    
+    if (!checkIn || !checkOut) {
+        return res.status(400).json({ error: 'checkIn and checkOut required' });
+    }
+    
+    const query = `
+        SELECT * FROM Room 
+        WHERE id NOT IN (
+            SELECT room_id FROM Booking 
+            WHERE status = 'confirmed' 
+            AND check_in_date < ? 
+            AND check_out_date > ?
+        )
+    `;
+    
+    db.all(query, [checkOut, checkIn], (err, rooms) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database error' });
+        }
+        res.json(rooms);
+    });
+});
+
+
 HotelRouter.get('/rooms/:id', (req, res) => {
     const roomId = req.params.id;
 
