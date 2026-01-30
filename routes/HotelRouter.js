@@ -92,5 +92,22 @@ HotelRouter.get('/my-bookings', verifyToken, (req, res) => {
         return res.json(rows);
     });
 });
+HotelRouter.get('/bookings/:id', verifyToken, function (req, res) {
+    var bookingId = req.params.id;
+    var userId = req.user.id;
 
+    var query =
+        "SELECT " +
+        "Booking.id, Booking.checkInDate, Booking.checkOutDate, Booking.status, " +
+        "Room.type AS roomType, Room.price AS price " +
+        "FROM Booking " +
+        "JOIN Room ON Booking.roomId = Room.id " +
+        "WHERE Booking.id = ? AND Booking.userId = ?";
+
+    db.get(query, [bookingId, userId], function (err, row) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: "Booking not found" });
+        return res.json(row);
+    });
+});
 module.exports = HotelRouter;

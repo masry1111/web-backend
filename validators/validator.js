@@ -1,6 +1,8 @@
 
-const validateSignup = (req, res, next) => {
-    const { name, email, password } = req.body;
+var validateSignup = function (req, res, next) {
+    var name = req.body.name;
+    var email = req.body.email;
+    var password = req.body.password;
 
     //Check if fields are empty
     if (!name || !email || !password) {
@@ -20,8 +22,9 @@ const validateSignup = (req, res, next) => {
     next(); //If every condition is successfully met, it proceed to the controller
 };
 
-const validateLogin = (req, res, next) => {
-    const { email, password } = req.body;
+var validateLogin = function (req, res, next) {
+    var email = req.body.email;
+    var password = req.body.password;
 
     if (!email || !password) {
         return res.status(400).json({ message: "Please provide email and password." });
@@ -30,4 +33,7 @@ const validateLogin = (req, res, next) => {
     next(); // Proceed to login logic
 };
 
-module.exports = { validateSignup, validateLogin };
+module.exports = { 
+    validateSignup: validateSignup,
+    validateLogin: validateLogin 
+};

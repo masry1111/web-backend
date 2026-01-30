@@ -1,15 +1,14 @@
-const jwt = require('jsonwebtoken');
-const SECRET_KEY = process.env.SECRET_KEY || 'mohamed_diamond_secure_access_2025';
+var jwt = require('jsonwebtoken');
+var SECRET_KEY = process.env.SECRET_KEY || 'mohamed_diamond_secure_access_2025';
 
-const verifyToken = (req, res, next) => {
-    const token = req.cookies.token;
-
+var verifyToken = function (req, res, next) {
+    var token = req.cookies.token;
     if (!token) {
         return res.status(403).json({ error: 'A token is required for authentication' });
     }
 
     try {
-        const decoded = jwt.verify(token, SECRET_KEY);
+        var decoded = jwt.verify(token, SECRET_KEY);
         req.user = decoded; 
         next();
     } catch (err) {
@@ -18,7 +17,7 @@ const verifyToken = (req, res, next) => {
 };
 
 // manager only check
-const verifyManager = (req, res, next) => {
+var verifyManager = function (req, res, next) {
     if (!req.user) {
         return res.status(403).json({ error: "Not authenticated" });
     }
@@ -30,5 +29,9 @@ const verifyManager = (req, res, next) => {
     next();
 };
 
-module.exports = { verifyToken, verifyManager, SECRET_KEY };
+module.exports = { 
+    verifyToken: verifyToken, 
+    verifyManager: verifyManager, 
+    SECRET_KEY: SECRET_KEY
+ };
 

@@ -1,10 +1,10 @@
-const { db } = require('../models/db');
+var { db } = require('../models/db').db;
 
 //Check Availability (Shows remaining capacity)
-const getAvailableRooms = (req, res) => {
+var getAvailableRooms = function (req, res) {
 
     // Show rooms that have capacity left
-    db.all(`SELECT * FROM Room WHERE capacity > 0`, [], (err, rows) => {
+    db.all("SELECT * FROM Room WHERE capacity > 0", [], function (err, rows) {
         if (err) return res.status(500).json({ error: err.message });
         res.status(200).json(rows);
     });

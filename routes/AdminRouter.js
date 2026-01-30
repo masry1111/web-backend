@@ -7,23 +7,32 @@ router.use(verifyToken);
 router.use(verifyManager);
 
 // get all bookings (admin command)
-router.get('/bookings', (req, res) => {
-    const query = `
-        SELECT 
-            Booking.id AS bookingId,
-            Room.type AS roomType,
-            User.name AS username,
-            User.email AS email,
-            Booking.checkInDate,
-            Booking.checkOutDate,
-            Booking.status
-        FROM Booking
-        JOIN User ON Booking.userId = User.id
-        JOIN Room ON Booking.roomId = Room.id
-        ORDER BY Booking.id DESC
-    `;
+router.get('/bookings', function (req, res) {
+    var status = req.query.status;
 
-    db.all(query, [], (err, rows) => {
+    var query =
+        "SELECT " +
+        "Booking.id AS bookingId, " +
+        "Room.type AS roomType, " +
+        "User.name AS username, " +
+        "User.email AS email, " +
+        "Booking.checkInDate, " +
+        "Booking.checkOutDate, " +
+        "Booking.status " +
+        "FROM Booking " +
+        "JOIN User ON Booking.userId = User.id " +
+        "JOIN Room ON Booking.roomId = Room.id ";
+
+    var params = [];
+
+    if (status) {
+        query += "WHERE Booking.status = ? ";
+        params.push(status);
+    }
+
+    query += "ORDER BY Booking.id DESC";
+
+    db.all(query, params, function (err, rows) {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
