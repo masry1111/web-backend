@@ -29,4 +29,8 @@ AuthRouter.route('/signout')
 AuthRouter.route('/account')
     .post(deleteAccount);
 
+    var verifyToken = require('../middleware/authMiddleware').verifyToken;
+AuthRouter.route('/account')
+  .post(verifyToken, deleteAccount);
+
 module.exports = AuthRouter;

@@ -9,34 +9,61 @@ router.use(verifyManager);
 
 // get all bookings (admin command)
 router.get('/bookings', function (req, res) {
-    var status = req.query.status;
+  var status = req.query.status;
 
-    var query =
-        "SELECT " +
-        "Booking.id AS bookingId, " +
-        "Room.type AS roomType, " +
-        "User.name AS username, " +
-        "User.email AS email, " +
-        "Booking.checkInDate, " +
-        "Booking.checkOutDate, " +
-        "Booking.status " +
-        "FROM Booking " +
-        "JOIN User ON Booking.userId = User.id " +
-        "JOIN Room ON Booking.roomId = Room.id ";
+  var bookingQuery =
+    "SELECT id, userId, roomId, checkInDate, checkOutDate, status " +
+    "FROM Booking ";
 
-    var params = [];
+  var params = [];
 
-    if (status) {
-        query += "WHERE Booking.status = ? ";
-        params.push(status);
-    }
+  if (status) {
+    bookingQuery += "WHERE status = ? ";
+    params.push(status);
+  }
 
-    query += "ORDER BY Booking.id DESC";
+  bookingQuery += "ORDER BY id DESC";
 
-    db.all(query, params, function (err, rows) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
+  db.all(bookingQuery, params, function (err, bookings) {
+    if (err) return res.status(500).json({ error: err.message });
+
+    db.all("SELECT id, name, email FROM User", [], function (err2, users) {
+      if (err2) return res.status(500).json({ error: err2.message });
+
+      db.all("SELECT id, type FROM Room", [], function (err3, rooms) {
+        if (err3) return res.status(500).json({ error: err3.message });
+
+        var userMap = {};
+        for (var i = 0; i < users.length; i++) {
+          userMap[users[i].id] = users[i];
+        }
+
+        var roomMap = {};
+        for (var j = 0; j < rooms.length; j++) {
+          roomMap[rooms[j].id] = rooms[j];
+        }
+
+        var result = [];
+        for (var k = 0; k < bookings.length; k++) {
+          var b = bookings[k];
+          var u = userMap[b.userId];
+          var r = roomMap[b.roomId];
+
+          result.push({
+            bookingId: b.id,
+            roomType: r ? r.type : null,
+            username: u ? u.name : null,
+            email: u ? u.email : null,
+            checkInDate: b.checkInDate,
+            checkOutDate: b.checkOutDate,
+            status: b.status
+          });
+        }
+
+        return res.json(result);
+      });
     });
+  });
 });
 
 // create room
@@ -74,6 +101,16 @@ router.put('/rooms/:id', function (req, res) {
         "UPDATE Room " +
         "SET type = ?, price = ?, description = ?, capacity = ? " +
         "WHERE id = ?";
+
+        if (capacity === undefined || capacity === null || capacity === "") {
+    return res.status(400).json({ error: "Capacity is required" });
+}
+
+capacity = parseInt(capacity, 10);
+
+if (isNaN(capacity) || capacity < 0) {
+    return res.status(400).json({ error: "Capacity must be a valid number (0 or more)" });
+}
 
     db.run(query, [type, price, description, capacity, req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });

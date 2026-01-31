@@ -29,34 +29,59 @@ var bookRoom = function (req, res) {
         db.run("INSERT INTO Booking (userId, roomId, checkInDate, checkOutDate) VALUES (?, ?, ?, ?)", 
             [userId, roomId, checkInDate, checkOutDate], function(err) {
                 if (err) return res.status(500).json({ error: "Booking Failed" });
-                
+
+                var bookingId = this.lastID;
+
                 // decrease capacity
                 db.run("UPDATE Room SET capacity = capacity - 1 WHERE id = ?", [roomId], function() {
-                    res.status(200).json({ message: "Booking Successful", bookingId: this.lastID });
+                    res.status(200).json({ message: "Booking Successful", bookingId: bookingId });
                 });
         });
     });
 };
 
-//Cancel (increases Capacity)
+// Cancel booking (increases capacity)
 var cancelBooking = function (req, res) {
     var id = req.params.id;
     var userId = req.user.id;
 
-    db.get("SELECT roomId FROM Booking WHERE id = ? AND userId = ?", [id, userId], function(err, row) {
-        if (!row) return res.status(404).json({ error: "Booking not found" });
+    db.get(
+        "SELECT roomId FROM Booking WHERE id = ? AND userId = ? AND status != 'Cancelled'",
+        [id, userId],
+        function (err, row) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
 
-        db.run("UPDATE Booking SET status = 'Cancelled' WHERE id = ?", [id], function() {
-            // INCREASE CAPACITY
-           var bookingId = this.lastID;
+            if (!row) {
+                return res.status(404).json({ error: "Booking not found" });
+            }
 
-var bookingId = this.lastID;
+            db.run(
+                "UPDATE Booking SET status = 'Cancelled' WHERE id = ?",
+                [id],
+                function (err2) {
+                    if (err2) {
+                        return res.status(500).json({ error: err2.message });
+                    }
 
-db.run("UPDATE Room SET capacity = capacity - 1 WHERE id = ?", [roomId], function() {
-    res.status(200).json({ message: "Booking Successful", bookingId: bookingId });
-});
-        });
-    });
+                    db.run(
+                        "UPDATE Room SET capacity = capacity + 1 WHERE id = ?",
+                        [row.roomId],
+                        function (err3) {
+                            if (err3) {
+                                return res.status(500).json({ error: err3.message });
+                            }
+
+                            return res.status(200).json({
+                                message: "Cancelled. Capacity returned."
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
 };
 
 module.exports = {

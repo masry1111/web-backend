@@ -42,42 +42,63 @@ HotelRouter.put('/cancel/:id', verifyToken, cancelBooking);
 //Get ALL Bookings for Logged-in User
 //Endpoint: GET /api/my-bookings
 
-HotelRouter.get('/my-bookings', verifyToken, function(req, res) {
+HotelRouter.get('/my-bookings', verifyToken, function (req, res) {
     var userId = req.user.id;
 
-    var query = 
-        "SELECT " +
-            "Booking.id, " +
-            "Booking.checkInDate, " +
-            "Booking.checkOutDate, " +
-            "Booking.status, " +
-            "Room.type AS roomType " +
-        "FROM Booking " +
-        "JOIN Room ON Booking.roomId = Room.id " +
-        "WHERE Booking.userId = ? " +
-        "ORDER BY Booking.id DESC";
+    db.all(
+        "SELECT id, roomId, checkInDate, checkOutDate, status FROM Booking WHERE userId = ? ORDER BY id DESC",
+        [userId],
+        function (err, bookings) {
+            if (err) return res.status(500).json({ error: err.message });
 
-    db.all(query, [userId], function(err, rows) {
-        if (err) return res.status(500).json({ error: err.message });
-        return res.json(rows);
-    });
+            db.all("SELECT id, type FROM Room", [], function (err2, rooms) {
+                if (err2) return res.status(500).json({ error: err2.message });
+
+                var roomMap = {};
+                for (var i = 0; i < rooms.length; i++) {
+                    roomMap[rooms[i].id] = rooms[i].type;
+                }
+
+                for (var j = 0; j < bookings.length; j++) {
+                    bookings[j].roomType = roomMap[bookings[j].roomId] || null;
+                }
+
+                return res.json(bookings);
+            });
+        }
+    );
 });
+
 HotelRouter.get('/bookings/:id', verifyToken, function (req, res) {
     var bookingId = req.params.id;
     var userId = req.user.id;
 
-    var query =
-        "SELECT " +
-        "Booking.id, Booking.checkInDate, Booking.checkOutDate, Booking.status, " +
-        "Room.type AS roomType, Room.price AS price " +
-        "FROM Booking " +
-        "JOIN Room ON Booking.roomId = Room.id " +
-        "WHERE Booking.id = ? AND Booking.userId = ?";
+    db.get(
+        "SELECT id, roomId, checkInDate, checkOutDate, status FROM Booking WHERE id = ? AND userId = ?",
+        [bookingId, userId],
+        function (err, booking) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!booking) return res.status(404).json({ error: "Booking not found" });
 
-    db.get(query, [bookingId, userId], function (err, row) {
-        if (err) return res.status(500).json({ error: err.message });
-        if (!row) return res.status(404).json({ error: "Booking not found" });
-        return res.json(row);
-    });
+            db.get(
+                "SELECT type, price FROM Room WHERE id = ?",
+                [booking.roomId],
+                function (err2, room) {
+                    if (err2) return res.status(500).json({ error: err2.message });
+                    if (!room) return res.status(404).json({ error: "Room not found" });
+
+                    return res.json({
+                        id: booking.id,
+                        checkInDate: booking.checkInDate,
+                        checkOutDate: booking.checkOutDate,
+                        status: booking.status,
+                        roomType: room.type,
+                        price: room.price
+                    });
+                }
+            );
+        }
+    );
 });
+
 module.exports = HotelRouter;
