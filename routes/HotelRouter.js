@@ -1,14 +1,13 @@
-const express = require('express');
-const { 
-    getAvailableRooms, 
-    bookRoom, 
-    cancelBooking 
-} = require('../controller/OwnerHotelController');
+var express = require('express');
+var hotelcontroller = require('../controller/OwnerHotelController');
+var getAvailableRooms = hotelcontroller.getAvailableRooms;
+var bookRoom = hotelcontroller.bookRoom;
+var cancelBooking = hotelcontroller.cancelBooking;
 
-const { verifyToken } = require('../middleware/authMiddleware');
-const { db } = require('../models/db');
+var verifyToken  = require('../middleware/authMiddleware').verifyToken;
+var db = require('../models/db').db;
 
-const HotelRouter = express.Router();
+var HotelRouter = express.Router();
 
 //Endpoint: GET /api/rooms
 
@@ -17,40 +16,12 @@ HotelRouter.get('/rooms', getAvailableRooms);
 // Get ONE room by ID (public)
 //Endpoint: GET /api/rooms/:id
 
+HotelRouter.get('/rooms/:id', function(req, res) {
+    var roomId = req.params.id;
 
-router.get('/rooms/available', (req, res) => {
-    const checkIn = req.query.checkIn;
-    const checkOut = req.query.checkOut;
-    
-    if (!checkIn || !checkOut) {
-        return res.status(400).json({ error: 'checkIn and checkOut required' });
-    }
-    
-    const query = `
-        SELECT * FROM Room 
-        WHERE id NOT IN (
-            SELECT room_id FROM Booking 
-            WHERE status = 'confirmed' 
-            AND check_in_date < ? 
-            AND check_out_date > ?
-        )
-    `;
-    
-    db.all(query, [checkOut, checkIn], (err, rooms) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database error' });
-        }
-        res.json(rooms);
-    });
-});
+    var query = "SELECT * FROM Room WHERE id = ?";
 
-
-HotelRouter.get('/rooms/:id', (req, res) => {
-    const roomId = req.params.id;
-
-    const query = `SELECT * FROM Room WHERE id = ?`;
-
-    db.get(query, [roomId], (err, row) => {
+    db.get(query, [roomId], function(err, row) {
         if (err) return res.status(500).json({ error: err.message });
         if (!row) return res.status(404).json({ error: "Room not found" });
 
@@ -71,23 +42,22 @@ HotelRouter.put('/cancel/:id', verifyToken, cancelBooking);
 //Get ALL Bookings for Logged-in User
 //Endpoint: GET /api/my-bookings
 
-HotelRouter.get('/my-bookings', verifyToken, (req, res) => {
-    const userId = req.user.id;
+HotelRouter.get('/my-bookings', verifyToken, function(req, res) {
+    var userId = req.user.id;
 
-    const query = `
-        SELECT 
-            Booking.id,
-            Booking.checkInDate,
-            Booking.checkOutDate,
-            Booking.status,
-            Room.type AS roomType
-        FROM Booking
-        JOIN Room ON Booking.roomId = Room.id
-        WHERE Booking.userId = ?
-        ORDER BY Booking.id DESC
-    `;
+    var query = 
+        "SELECT " +
+            "Booking.id, " +
+            "Booking.checkInDate, " +
+            "Booking.checkOutDate, " +
+            "Booking.status, " +
+            "Room.type AS roomType " +
+        "FROM Booking " +
+        "JOIN Room ON Booking.roomId = Room.id " +
+        "WHERE Booking.userId = ? " +
+        "ORDER BY Booking.id DESC";
 
-    db.all(query, [userId], (err, rows) => {
+    db.all(query, [userId], function(err, rows) {
         if (err) return res.status(500).json({ error: err.message });
         return res.json(rows);
     });

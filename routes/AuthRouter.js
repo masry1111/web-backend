@@ -1,11 +1,17 @@
-const express = require('express');
+var express = require('express');
 // Importing the controller functions
-const { signup, login, signout, deleteAccount } = require('../controller/authController');
+var authController = require('../controller/authController');
+var signup = authController.signup;
+var login = authController.login;
+var signout = authController.signout;
+var deleteAccount = authController.deleteAccount;
 
 // importing validator
-const { validateLogin, validateSignup } = require('../validators/validator');
+var validator = require('../validators/validator');
+var validateLogin = validator.validateLogin;
+var validateSignup = validator.validateSignup;
 
-const AuthRouter = express.Router();
+var AuthRouter = express.Router();
 
 // Route for User Signup
 AuthRouter.route('/signup')

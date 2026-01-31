@@ -1,7 +1,7 @@
-var { db } = require('../models/db').db;
+var db  = require('../models/db').db;
 var bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
-var { SECRET_KEY } = require('../middleware/authMiddleware').SECRET_KEY;
+var SECRET_KEY = require('../middleware/authMiddleware').SECRET_KEY;
 
 //signup
 var signup = function (req, res) {
@@ -105,14 +105,14 @@ var deleteAccount = function (req, res) {
 
     db.serialize(function() {
         // Delete all bookings for user first
-        db.run('DELETE FROM Booking WHERE userId = ?', [userId], function(err) {
+        db.run("DELETE FROM Booking WHERE userId = ?", [userId], function(err) {
             if (err) {
                 console.log("[" + time + "] [DELETE-FAIL] Booking deletion failed for: " + email + " | IP: " + ip);
                 return res.status(500).send('Delete failed');
             }
 
             // Delete the user
-            db.run('DELETE FROM User WHERE id = ?', [userId], function(err) {
+            db.run("DELETE FROM User WHERE id = ?", [userId], function(err) {
                 if (err) {
                     console.log("[" + time + "] [DELETE-FAIL] User deletion failed for: " + email + " | IP: " + ip);
                     return res.status(500).send('Delete failed');

@@ -1,4 +1,4 @@
-var { db } = require('../models/db').db;
+var db  = require('../models/db').db;
 
 //Check Availability (Shows remaining capacity)
 var getAvailableRooms = function (req, res) {
@@ -11,12 +11,14 @@ var getAvailableRooms = function (req, res) {
 };
 
 //Book Room (decreases Capacity)
-const bookRoom = (req, res) => {
-    const { roomId, checkInDate, checkOutDate } = req.body;
-    const userId = req.user.id;
+var bookRoom = function (req, res) {
+    var roomId = req.body.roomId;
+    var checkInDate = req.body.checkInDate;
+    var checkOutDate = req.body.checkOutDate;
+    var userId = req.user.id;
 
     // Check if room has capacity
-    db.get(`SELECT capacity FROM Room WHERE id = ?`, [roomId], (err, row) => {
+    db.get("SELECT capacity FROM Room WHERE id = ?", [roomId], function(err, row) {
         if (err || !row) return res.status(404).json({ error: "Room not found" });
 
         if (row.capacity <= 0) {
@@ -24,12 +26,12 @@ const bookRoom = (req, res) => {
         }
 
         // Create Booking
-        db.run(`INSERT INTO Booking (userId, roomId, checkInDate, checkOutDate) VALUES (?, ?, ?, ?)`, 
+        db.run("INSERT INTO Booking (userId, roomId, checkInDate, checkOutDate) VALUES (?, ?, ?, ?)", 
             [userId, roomId, checkInDate, checkOutDate], function(err) {
                 if (err) return res.status(500).json({ error: "Booking Failed" });
                 
                 // decrease capacity
-                db.run(`UPDATE Room SET capacity = capacity - 1 WHERE id = ?`, [roomId], () => {
+                db.run("UPDATE Room SET capacity = capacity - 1 WHERE id = ?", [roomId], function() {
                     res.status(200).json({ message: "Booking Successful", bookingId: this.lastID });
                 });
         });
@@ -37,20 +39,28 @@ const bookRoom = (req, res) => {
 };
 
 //Cancel (increases Capacity)
-const cancelBooking = (req, res) => {
-    const { id } = req.params;
-    const userId = req.user.id;
+var cancelBooking = function (req, res) {
+    var id = req.params.id;
+    var userId = req.user.id;
 
-    db.get(`SELECT roomId FROM Booking WHERE id = ? AND userId = ?`, [id, userId], (err, row) => {
+    db.get("SELECT roomId FROM Booking WHERE id = ? AND userId = ?", [id, userId], function(err, row) {
         if (!row) return res.status(404).json({ error: "Booking not found" });
 
-        db.run(`UPDATE Booking SET status = 'Cancelled' WHERE id = ?`, [id], () => {
+        db.run("UPDATE Booking SET status = 'Cancelled' WHERE id = ?", [id], function() {
             // INCREASE CAPACITY
-            db.run(`UPDATE Room SET capacity = capacity + 1 WHERE id = ?`, [row.roomId], () => {
-                res.status(200).json({ message: "Cancelled. Capacity returned." });
-            });
+           var bookingId = this.lastID;
+
+var bookingId = this.lastID;
+
+db.run("UPDATE Room SET capacity = capacity - 1 WHERE id = ?", [roomId], function() {
+    res.status(200).json({ message: "Booking Successful", bookingId: bookingId });
+});
         });
     });
 };
 
-module.exports = { getAvailableRooms, bookRoom, cancelBooking };
+module.exports = {
+    getAvailableRooms: getAvailableRooms,
+    bookRoom: bookRoom,
+    cancelBooking: cancelBooking
+};

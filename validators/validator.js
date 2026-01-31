@@ -15,7 +15,7 @@ var validateSignup = function (req, res, next) {
     }
 
     //Simple email check making sure @ is present
-    if (!email.includes('@')) {
+    if (email.indexOf('@') === -1) {
         return res.status(400).json({ message: "Invalid email format." });
     }
 

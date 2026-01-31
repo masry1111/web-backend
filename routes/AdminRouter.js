@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const { db } = require('../models/db');
-const { verifyToken, verifyManager } = require('../middleware/authMiddleware');
+var express = require('express');
+var router = express.Router();
+var db  = require('../models/db').db;
+var verifyToken = require('../middleware/authMiddleware').verifyToken;
+var verifyManager = require('../middleware/authMiddleware').verifyManager;
 
 router.use(verifyToken);
 router.use(verifyManager);
@@ -39,22 +40,23 @@ router.get('/bookings', function (req, res) {
 });
 
 // create room
-router.post('/rooms', (req, res) => {
-    const { type, price, description } = req.body;
+router.post('/rooms', function (req, res) {
+    var type = req.body.type;
+    var price = req.body.price;
+    var description = req.body.description;
 
     if (!type || !price || !description) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const query = `
-        INSERT INTO Room (type, price, description, capacity)
-        VALUES (?, ?, ?, 10)
-    `;
+    var query = 
+        "INSERT INTO Room (type, price, description, capacity) " +
+        "VALUES (?, ?, ?, 10)";
 
     db.run(query, [type, price, description], function (err) {
         if (err) return res.status(500).json({ error: err.message });
 
-        res.json({
+        return res.json({
             message: "Room successfully created",
             roomId: this.lastID
         });
@@ -62,14 +64,16 @@ router.post('/rooms', (req, res) => {
 });
 
 // update room
-router.put('/rooms/:id', (req, res) => {
-    const { type, price, description, capacity } = req.body;
+router.put('/rooms/:id', function (req, res) {
+    var type = req.body.type;
+    var price = req.body.price;
+    var description = req.body.description;
+    var capacity = req.body.capacity;
 
-    const query = `
-        UPDATE Room 
-        SET type = ?, price = ?, description = ?, capacity = ?
-        WHERE id = ?
-    `;
+    var query = 
+        "UPDATE Room " +
+        "SET type = ?, price = ?, description = ?, capacity = ? " +
+        "WHERE id = ?";
 
     db.run(query, [type, price, description, capacity, req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
@@ -80,8 +84,8 @@ router.put('/rooms/:id', (req, res) => {
 });
 
 // delete room
-router.delete('/rooms/:id', (req, res) => {
-    db.run(`DELETE FROM Room WHERE id = ?`, [req.params.id], function (err) {
+router.delete('/rooms/:id', function (req, res) {
+    db.run("DELETE FROM Room WHERE id = ?", [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: "Room not found" });
 
@@ -90,15 +94,16 @@ router.delete('/rooms/:id', (req, res) => {
 });
 
 // booking status update
-router.put('/booking/status', (req, res) => {
-    const { bookingId, status } = req.body;
+router.put('/booking/status', function (req, res) {
+    var bookingId = req.body.bookingId;
+    var status = req.body.status;
 
     if (!bookingId || !status) {
         return res.status(400).json({ error: "Missing bookingId or status" });
     }
 
     db.run(
-        `UPDATE Booking SET status = ? WHERE id = ?`,
+        "UPDATE Booking SET status = ? WHERE id = ?",
         [status, bookingId],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
