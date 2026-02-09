@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+    <h2>Admin Dashboard</h2>
+</header>
+
+<h3>All Bookings</h3>
+<button onclick="loadAdminBookings()">Refresh</button>
+<div id="bookingList" class="room-list"></div>
+
+<hr>
+
+<h3>Create Room</h3>
+<input id="newType" placeholder="Room Type">
+<input id="newPrice" placeholder="Price">
+<input id="newDesc" placeholder="Description">
+<button onclick="createRoom()">Create</button>
+<p id="createMsg"></p>
+
+<hr>
+
+<h3>Update Room</h3>
+<input id="updateId" placeholder="Room ID">
+<input id="updateType" placeholder="New Type">
+<input id="updatePrice" placeholder="New Price">
+<input id="updateDesc" placeholder="New Description">
+<input id="updateCap" placeholder="Capacity">
+<button onclick="updateRoom()">Update Room</button>
+<p id="updateMsg"></p>
+
+<hr>
+
+<h3>Delete Room</h3>
+<input id="deleteRoomId" placeholder="Room ID">
+<button onclick="deleteRoom()">Delete Room</button>
+<p id="deleteRoomMessage"></p>
+
+<hr>
+
+<script>
+function requestJSON(method, url, body, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.withCredentials = true;
+
+    if (body) {
+        xhr.setRequestHeader("Content-Type", "application/json");
+    }
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            var data = null;
+            try { data = JSON.parse(xhr.responseText); } catch (e) {}
+            callback(xhr.status, data, xhr.responseText);
+        }
+    };
+
+    xhr.send(body ? JSON.stringify(body) : null);
+}
+
+//load bookings
+
+function loadAdminBookings() {
+    requestJSON("GET", "http://localhost:5000/admin/bookings", null, function (status, data) {
+        var container = document.getElementById("bookingList");
+        container.innerHTML = "";
+
+        if (status !== 200 || !data || data.length === 0) {
+            container.innerHTML = "<p>No bookings found.</p>";
+            return;
+        }
+
+        for (var i = 0; i < data.length; i++) {
+            var b = data[i];
+
+            var card = document.createElement("div");
+            card.className = "room-card";
+
+            card.innerHTML =
+                "<h3>" + b.roomType + "</h3>" +
+                "<p>" + b.email + "</p>" +
+                "<p>Check-in: " + b.checkInDate + "</p>" +
+                "<p>Check-out: " + b.checkOutDate + "</p>" +
+                "<p>Status: " + b.status + "</p>" +
+                "<button onclick=\"updateBookingStatus(" + b.bookingId + ", 'confirmed')\">Confirm</button> " +
+                "<button onclick=\"updateBookingStatus(" + b.bookingId + ", 'cancelled')\">Cancel</button>";
+
+            container.appendChild(card);
+        }
+    });
+}
+
+function updateBookingStatus(id, newStatus) {
+    requestJSON(
+        "PUT",
+        "http://localhost:5000/admin/booking/status",
+        { bookingId: id, status: newStatus },
+        function (status, data) {
+
+            if (status === 200) {
+                alert("Booking status updated.");
+                loadAdminBookings();
+            } else {
+                alert("Failed: " + ((data && data.error) ? data.error : "Unknown error"));
+            }
+        }
+    );
+}
+
+//create room
+
+function createRoom() {
+    var type = document.getElementById("newType").value;
+    var price = document.getElementById("newPrice").value;
+    var description = document.getElementById("newDesc").value;
+
+    requestJSON(
+        "POST",
+        "http://localhost:5000/admin/rooms",
+        { type: type, price: price, description: description },
+        function (status, data) {
+            document.getElementById("createMsg").innerText =
+                (status === 200 || status === 201) ? "Room created!" : ((data && data.error) ? data.error : "Failed.");
+        }
+    );
+}
+
+function updateRoom() {
+    var id = document.getElementById("updateId").value;
+    var type = document.getElementById("updateType").value;
+    var price = document.getElementById("updatePrice").value;
+    var description = document.getElementById("updateDesc").value;
+    var capacity = document.getElementById("updateCap").value;
+
+    requestJSON(
+        "PUT",
+        "http://localhost:5000/admin/rooms/" + id,
+        { type: type, price: price, description: description, capacity: capacity },
+        function (status, data) {
+            document.getElementById("updateMsg").innerText =
+                (status === 200) ? "Room updated!" : ((data && data.error) ? data.error : "Failed.");
+        }
+    );
+}
+
+function deleteRoom() {
+    var id = document.getElementById("deleteRoomId").value;
+
+    requestJSON(
+        "DELETE",
+        "http://localhost:5000/admin/rooms/" + id,
+        null,
+        function (status, data) {
+            document.getElementById("deleteRoomMessage").innerText =
+                (status === 200) ? "Room deleted." : ((data && data.error) ? data.error : "Failed.");
+
+            if (status === 200) {
+                loadAdminBookings();
+            }
+        }
+    );
+}
+
+loadAdminBookings();
+</script>
+
+</body>
+</html>
+

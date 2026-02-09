@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+    <h2>Create Account</h2>
+</header>
+
+<div class="container">
+
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="signup()">Sign Up</button>
+
+    <p id="message" class="error"></p>
+
+    <p>
+        Already have an account?
+        <a href="index.html">Login</a>
+    </p>
+
+</div>
+
+<script>
+    function requestJSON(method, url, body, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.withCredentials = true;
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            var data = null;
+            try { data = JSON.parse(xhr.responseText); } catch (e) {}
+            callback(xhr.status, data);
+        }
+    };
+
+    xhr.send(body ? JSON.stringify(body) : null);
+}
+ function signup() {
+    var name = document.getElementById("name").value;
+    var email = document.getElementById("email").value;
+    var password = document.getElementById("password").value;
+
+    requestJSON("POST", "http://localhost:5000/auth/signup", { name: name, email: email, password: password }, function (status, data) {
+
+        if (status !== 200 && status !== 201) {
+            document.getElementById("message").innerText = (data && data.error) ? data.error : "Signup failed.";
+            return;
+        }
+
+        setTimeout(function () {
+            window.location.href = "index.html";
+        }, 1000);
+    });
+
+    document.getElementById("message").innerText = "Account created! Redirecting...";
+}
+</script>
+
+</body>
+</html>

@@ -3,21 +3,16 @@ var app = express();
 var dotenv = require('dotenv');
 var cookieParser = require('cookie-parser');
 dotenv.config();
+var path = require("path");
+app.use(express.static(path.join(__dirname, "frontend")));
 
-//cors config
-var cors = require('cors');
-var corsOptions = {
-    origin: [
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-};
+app.get("/", function(req, res) {
+    res.sendFile(path.join(__dirname, "frontend", "index.html"));
+});
 
-app.use(cors(corsOptions));
-
+app.get("/index.html", function(req, res) {
+    res.sendFile(path.join(__dirname, "frontend", "index.html"));
+});
 app.use(express.json());
 app.use(cookieParser());
 

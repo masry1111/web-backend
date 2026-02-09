@@ -101,7 +101,6 @@ router.put('/rooms/:id', function (req, res) {
         "UPDATE Room " +
         "SET type = ?, price = ?, description = ?, capacity = ? " +
         "WHERE id = ?";
-
         if (capacity === undefined || capacity === null || capacity === "") {
     return res.status(400).json({ error: "Capacity is required" });
 }
@@ -111,7 +110,6 @@ capacity = parseInt(capacity, 10);
 if (isNaN(capacity) || capacity < 0) {
     return res.status(400).json({ error: "Capacity must be a valid number (0 or more)" });
 }
-
     db.run(query, [type, price, description, capacity, req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: "Room not found" });

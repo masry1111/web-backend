@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+    <h2>Login</h2>
+</header>
+
+<div class="container">
+    <label>Email:</label>
+    <input type="email" id="email">
+
+    <label>Password:</label>
+    <input type="password" id="password">
+
+    <button onclick="login()">Login</button>
+
+    <p>Don't have an account? <a href="signup.html">Signup here</a></p>
+
+    <p id="message"></p>
+</div>
+
+<script>
+    function requestJSON(method, url, data, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            var response = null;
+            try {
+                response = JSON.parse(xhr.responseText);
+            } catch (e) {
+                response = null;
+            }
+            callback(xhr.status, response);
+        }
+    };
+
+    xhr.send(JSON.stringify(data));
+}
+console.log("LOGIN SCRIPT IS RUNNING");
+
+function login() {
+    var email = document.getElementById("email").value;
+    var password = document.getElementById("password").value;
+
+    if (!email || !password) {
+        document.getElementById("message").innerText = "Please enter email and password.";
+        return;
+    }
+
+    requestJSON("POST", "/auth/login", { email: email, password: password }, function (status, data) {
+        if (status !== 200 || !data || !data.user) {
+            document.getElementById("message").innerText = "Invalid credentials.";
+            return;
+        }
+
+        console.log("LOGIN RESPONSE:", data);
+
+        if (data.user.role === "manager") {
+            console.log("REDIRECTING TO ADMIN.HTML");
+            window.location.href = "admin.html";
+        } else {
+            console.log("REDIRECTING TO ROOMS.HTML");
+            window.location.href = "rooms.html";
+        }
+    });
+}
+</script>
+
+</body>
+</html>

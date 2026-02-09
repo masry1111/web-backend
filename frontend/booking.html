@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Room</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+    <h2>Book Your Room</h2>
+</header>
+
+<div class="container">
+    <h3 id="roomName"></h3>
+
+    <label>Check-in Date:</label>
+    <input type="date" id="checkIn">
+
+    <label>Check-out Date:</label>
+    <input type="date" id="checkOut">
+
+    <button type="button" onclick="confirmBooking()">Confirm Booking</button>
+
+    <p id="message"></p>
+</div>
+
+<script src="./booking.js"></script>
+
+</body>
+</html>

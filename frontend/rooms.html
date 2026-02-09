@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Available Rooms</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+    <h2>Available Rooms</h2>
+</header>
+
+<div id="roomsContainer" class="room-list"></div>
+
+<script>
+function loadRooms() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://localhost:5000/api/rooms", true);
+    xhr.withCredentials = true;
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            var data = null;
+            try {
+                data = JSON.parse(xhr.responseText);
+            } catch (e) {}
+
+            var container = document.getElementById("roomsContainer");
+            container.innerHTML = "";
+
+            if (xhr.status !== 200 || !data || data.length === 0) {
+                container.innerHTML = "<p>No rooms available.</p>";
+                return;
+            }
+
+            for (var i = 0; i < data.length; i++) {
+                var room = data[i];
+
+                var card = document.createElement("div");
+                card.className = "room-card";
+
+                var desc = room.description ? room.description : "";
+
+                card.innerHTML =
+                    "<h3>" + room.type + "</h3>" +
+                    "<p>Price: $" + room.price + "</p>" +
+                    "<p>" + desc + "</p>" +
+                    "<button onclick='book(" + room.id + ")'>Book Now</button>";
+
+                container.appendChild(card);
+            }
+        }
+    };
+
+    xhr.send();
+}
+
+function book(roomId) {
+    // store chosen room ID temporarily
+    localStorage.setItem("roomId", roomId);
+    window.location.href = "booking.html";
+}
+
+loadRooms();
+</script>
+
+</body>
+</html>

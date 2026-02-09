@@ -16,7 +16,7 @@ var CreateRoomTable =
   "type TEXT NOT NULL," +
   "price REAL NOT NULL," +
   "description TEXT," +
-  "capacity INTEGER DEFAULT 10" +
+  "capacity INTEGER NOT NULL DEFAULT 10" +
   ")";
 
 var CreateBookingTable =
